@@ -24,6 +24,14 @@ class VectorSpaceModel:
         self.stop_word=["a", "is", "the", "of", "all", "and", "to", "can", "be", "as", "once"
                         , "for", "at", "am", "are", "has", "have", "had", "up", "his", "her", "in", "on", "no", "we", "do"]
         
+        if os.path.exists((os.path.join(os.getcwd(),'vsm_index.json'))):
+            DISK_READ=True
+        
+        if DISK_READ:
+            with open('vsm_index.json','r') as json_file:
+                self.tf_idf_index=json.load(json_file)
+
+
     def pre_process(self,document):
         document=document.lower()  #lowers the text
         document=contractions.fix(document)  #remove contractions 
@@ -40,9 +48,10 @@ class VectorSpaceModel:
                 doc_id=int(txt_file.split('.')[0])
                 f=open(os.path.join(DATASET_DIR,txt_file),'r',encoding='utf-8')
                 word_list=self.pre_process(f.read())
-                self.create_tf_df_index(word_list,doc_id)
+                self.create_tf_df_index(word_list,str(doc_id))
         TOTAL_DOCS=len(os.listdir(DATASET_DIR))    
         self.create_tf_idf_index()
+        self.write_file()
 
     def create_tf_df_index(self,words,DOC_ID):
         for word in words:
@@ -69,16 +78,15 @@ class VectorSpaceModel:
                 self.tf_idf_index[word]['tf_idf'][doc_id]=tf_idf
 
     def process_document_tf_idf(self):
+
+        for DOC_ID in range(1,TOTAL_DOCS+1):
+             self.document_tf_idf_index[str(DOC_ID)]=[0]*len(self.tf_idf_index.keys())
+        index=0
         for word in self.tf_idf_index.keys():
             tf_idf_dict=self.tf_idf_index[word]['tf_idf']
-            for doc_id in range(1,TOTAL_DOCS+1):
-                if doc_id not in self.document_tf_idf_index:
-                    self.document_tf_idf_index[doc_id]=list()
-
-                if doc_id in self.tf_idf_index[word]['tf_idf']:
-                    self.document_tf_idf_index[doc_id].append(float(self.tf_idf_index[word]['tf_idf'][doc_id]))
-                else:
-                    self.document_tf_idf_index[doc_id].append(0.0)
+            for doc_id in tf_idf_dict.keys():
+                self.document_tf_idf_index[doc_id][index]=float(self.tf_idf_index[word]['tf_idf'][doc_id])
+            index+=1
 
     def process_query_vector(self,query):
         query=query.lower().split()
@@ -116,12 +124,20 @@ class VectorSpaceModel:
         
         result_set.sort(key=lambda x: x[1],reverse=True)
         return result_set
+
+    def write_file(self):
+        vsm_index_json=json.dumps(self.tf_idf_index)  #writes both file in json format
+        with open('vsm_index.json','w') as json_file:
+            json_file.write(vsm_index_json)
         
 
 if __name__=='__main__':
     model=VectorSpaceModel()
-    model.process_txt()
+    if not DISK_READ:
+        model.process_txt()
+    
     model.process_document_tf_idf()
+
     while True:
         x=input('Enter Query: ')
         if x=='-1':
