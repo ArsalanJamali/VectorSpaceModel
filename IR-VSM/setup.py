@@ -130,18 +130,30 @@ class VectorSpaceModel:
         with open('vsm_index.json','w') as json_file:
             json_file.write(vsm_index_json)
         
-
+model=None
 if __name__=='__main__':
     model=VectorSpaceModel()
     if not DISK_READ:
+        print('Index Not Found Creating It...')
         model.process_txt()
-    
+        print('Index Created Successfully...')
     model.process_document_tf_idf()
-
+    print("We are ready let's begin...")
+    alpha=float(input('Enter value of alpha or enter -1 in order to set it to default(0.005): '))
+    if alpha==-1:
+        alpha=0.005
     while True:
         x=input('Enter Query: ')
         if x=='-1':
             break
         query_vector=model.process_query_vector(x)
-        alpha=0.005
         print(model.compute_result(query_vector,alpha))
+else:
+    model=VectorSpaceModel()
+    if not DISK_READ:
+        print('Index Not Found Creating It...')
+        model.process_txt()
+        print('Index Created Successfully...')
+    model.process_document_tf_idf()
+    print("We are ready let's begin...")
+    
