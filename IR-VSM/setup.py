@@ -70,7 +70,7 @@ class VectorSpaceModel:
         for word in self.tf_df_index.keys():
             word_tfs=self.tf_df_index[word]['tf']
             df=len(word_tfs)
-            idf=round(log10(TOTAL_DOCS/df),3)
+            idf=round(log10(df)/TOTAL_DOCS,3)
             self.tf_idf_index[word]={'idf':idf,'df':df,'tf_idf':dict()}
             for doc_id in self.tf_df_index[word]['tf'].keys():
                 tf=int(self.tf_df_index[word]['tf'][doc_id])
@@ -103,7 +103,7 @@ class VectorSpaceModel:
             idf=self.tf_idf_index[word]['idf']
 
             if word in query_tf_dict:
-                tf_idf=round(query_tf_dict[word]*idf,3)
+                tf_idf=query_tf_dict[word]
                 query_vector.append(tf_idf)
             else:
                 query_vector.append(0.0)
