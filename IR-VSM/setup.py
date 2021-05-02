@@ -53,7 +53,7 @@ class VectorSpaceModel:
         self.create_tf_idf_index()
         self.write_file()
 
-    def create_tf_df_index(self,words,DOC_ID):
+    def create_tf_df_index(self,words,DOC_ID):          #this creates the tf and df index storing all tf in each documents
         for word in words:
             if word not in self.tf_df_index:
                 self.tf_df_index[word]=dict()
@@ -67,9 +67,9 @@ class VectorSpaceModel:
                 self.tf_df_index[word]['tf'][DOC_ID]+=1
 
     def create_tf_idf_index(self):
-        for word in self.tf_df_index.keys():
-            word_tfs=self.tf_df_index[word]['tf']
-            df=len(word_tfs)
+        for word in self.tf_df_index.keys():                #this functions creates the tf idf index for all documents 
+            word_tfs=self.tf_df_index[word]['tf']           #though vectors are not formed here they are made on runtime 
+            df=len(word_tfs)                                #this index is being stored in the memory
             idf=round(log10(df)/TOTAL_DOCS,3)
             self.tf_idf_index[word]={'idf':idf,'df':df,'tf_idf':dict()}
             for doc_id in self.tf_df_index[word]['tf'].keys():
@@ -77,7 +77,7 @@ class VectorSpaceModel:
                 tf_idf=round(tf*idf,3)
                 self.tf_idf_index[word]['tf_idf'][doc_id]=tf_idf
 
-    def process_document_tf_idf(self):
+    def process_document_tf_idf(self):          #this functions creates the numpy vectors for each documents 
 
         for DOC_ID in range(1,TOTAL_DOCS+1):
              self.document_tf_idf_index[str(DOC_ID)]=[0]*len(self.tf_idf_index.keys())
@@ -92,8 +92,8 @@ class VectorSpaceModel:
         query=query.lower().split()
         query_tf_dict=dict()
         for word in query:
-            word=ps.stem(word)
-            if word not in query_tf_dict:
+            word=ps.stem(word)                      #this functions process the query vector in short creates it 
+            if word not in query_tf_dict:           #by using the idf index
                 query_tf_dict[word]=1
             else:
                 query_tf_dict[word]+=1
@@ -103,8 +103,8 @@ class VectorSpaceModel:
             idf=self.tf_idf_index[word]['idf']
 
             if word in query_tf_dict:
-                tf_idf=query_tf_dict[word]
-                query_vector.append(tf_idf)
+                tf_idf=query_tf_dict[word] 
+                query_vector.append(tf_idf)    #tf-idf weight not applied to the query vector
             else:
                 query_vector.append(0.0)
         
@@ -112,9 +112,9 @@ class VectorSpaceModel:
 
     def compute_result(self,query_vector,alpha):
         query_vector=np.array(query_vector)
-        result_set=list()
-        for DOC_ID in self.document_tf_idf_index.keys():
-            tf_idf_document_list=np.array(self.document_tf_idf_index[DOC_ID])
+        result_set=list()                                       #this functions using numpy built in functions for calculating 
+        for DOC_ID in self.document_tf_idf_index.keys():        #dot product,magnitude and then cosine similarity 
+            tf_idf_document_list=np.array(self.document_tf_idf_index[DOC_ID])   
             dot_product=query_vector.dot(tf_idf_document_list)
             mag1=np.linalg.norm(query_vector)
             mag2=np.linalg.norm(tf_idf_document_list)
